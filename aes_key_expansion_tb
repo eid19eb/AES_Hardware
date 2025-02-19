@@ -1,0 +1,93 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 20.08.2023 23:48:03
+// Design Name: 
+// Module Name: tb_aes_key_expansion
+// Project Name: AES Project
+// Target Devices: 
+// Tool Versions: 
+// Description: Testbench for AES Key Expansion
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+
+module aes_key_expansion_tb;
+    // Input 128-bit key for AES expansion (can also use 192/256-bit for nk=6, 8)
+    reg [127:0] key;
+    
+    // Output: 44 words for 128-bit key (each word is 32-bits)
+    wire [1407:0] w;  // 44 words * 32 bits = 1408 bits
+
+    // Instantiate the AES key expansion module
+    AES_key_expansion #(4, 10) key_expansion_instance (
+        .key(key),
+        .w(w)
+    );
+
+
+    // Task to display the expanded key words
+    task display_expanded_key;
+        integer i;
+        begin
+            $display("------------------------------------------------------");
+            $display("Expanding key: %h", key);
+            $display("Expanded Key Schedule:");
+            // Loop through each of the 11 rounds and display the 4 words per round
+            for (i = 0; i < 11; i = i + 1) begin
+                $display("Round %2d:", i);  // Round header
+                // Display 4 words (128 bits) per round key
+                $display("  w[%0d]: %h %h %h %h", 
+                    i, 
+                    w[(1407 - (i * 128)) -: 32], 
+                    w[(1375 - (i * 128)) -: 32], 
+                    w[(1343 - (i * 128)) -: 32], 
+                    w[(1311 - (i * 128)) -: 32]
+                );
+            end
+            $display("------------------------------------------------------\n");
+        end
+    endtask
+
+    // Test procedure
+    initial begin
+        // Test Case 1: 128-bit AES key (Standard Test Vector)
+        key = 128'h2b7e151628aed2a6abf7158809cf4f3c;  
+        #10;  
+        display_expanded_key;
+
+        // Test Case 2: Another 128-bit AES key
+        key = 128'h00112233445566778899aabbccddeeff;  
+        #10;  
+        display_expanded_key;
+
+        // Test Case 3: Edge case - all bits set to 0
+        key = 128'h0;  
+        #10;  
+        display_expanded_key;
+
+        // Test Case 4: Edge case - all bits set to 1
+        key = 128'hffffffffffffffffffffffffffffffff;  
+        #10;  
+        display_expanded_key;
+
+        // Test Case 5: Random 128-bit AES key
+        key = 128'h1a2b3c4d5e6f708192a2b3c4d5e6f708;  
+        #10;  
+        display_expanded_key;
+
+        // Test Case 6: Another random key
+        key = 128'h1234567890abcdef1234567890abcdef;  
+        #10;  
+        display_expanded_key;
+
+        $stop;  
+    end
+endmodule
